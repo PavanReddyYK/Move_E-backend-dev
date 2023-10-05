@@ -10,6 +10,8 @@ app.use(bodyParser.json())
 import dotenv from 'dotenv';
 dotenv.config();
 
+import './adapter/connection.js'
+
 import cors from "cors";
 app.use(cors());
 
@@ -18,14 +20,19 @@ app.use('/v1/user/',userRoutes)
 
 
 
+
+
+
+
+
+
+
 app.use("*",(req,res,next)=>{
     res.status(404).json({error:true,message:"Page Not Found!!!"})
 })
-
 app.use( (err,req,res,next)=>{
     res.status(400).json({error:true,message:err.message,data:"ok"})
 } )
-
 
 app.set('port',process.env.REACT_APP_PORT)
 const server = http.createServer(app)
