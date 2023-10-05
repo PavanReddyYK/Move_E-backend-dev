@@ -13,7 +13,8 @@ dotenv.config();
 import cors from "cors";
 app.use(cors());
 
-
+import userRoutes from "./routes/userRoutes.js";
+app.use('/v1/user/',userRoutes)
 
 
 
