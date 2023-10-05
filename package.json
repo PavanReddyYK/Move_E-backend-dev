@@ -1,0 +1,14 @@
+{
+  "name": "move_e-backend-dev",
+  "version": "1.0.0",
+  "description": "backend dev of a movie application",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Movie"
+  ],
+  "author": "PavanReddyYK",
+  "license": "ISC"
+}
