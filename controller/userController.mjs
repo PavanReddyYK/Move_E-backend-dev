@@ -1,5 +1,6 @@
 import { OAuth2Client } from "google-auth-library";
 import userMOdel from "../model/userModel.mjs";
+import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 import axios from "axios";
 
 export const registerUser = async (req, res, next) => {
@@ -34,9 +35,11 @@ export const googleSignUp = async (req, res, next) => {
   try {
     const request = req.body;
     // ! Set the redirection endpoint for Google to redirect back to after authentication
-    request["redirectionURL"] = `http://localhost:${process.env.REACT_APP_PORT}/v1/user/googleRedirectionURL`;
+    request[
+      "redirectionURL"
+    ] = `http://localhost:${process.env.REACT_APP_PORT}/v1/user/googleRedirectionURL`;
     // request["redirectionURL"] = `http://localhost:3000/dash`;
-    
+
     // ! Create an OAuth2Client instance with your Google OAuth2 credentials
     const oAuth2Client = new OAuth2Client(
       `${process.env.REACT_APP_OAuth2Client_CLIENT_ID}`,
@@ -47,7 +50,7 @@ export const googleSignUp = async (req, res, next) => {
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile",
-    ]; 
+    ];
     //     //! Generate the authorization URL with the specified scopes and access type
     const authorizeUrl = await oAuth2Client.generateAuthUrl({
       access_type: "offline",
@@ -62,7 +65,10 @@ export const googleSignUp = async (req, res, next) => {
 
 export const googleRedirectionURL = async (req, res, next) => {
   let request = req.query;
-  console.log("🚀 ~ file: userController.mjs:64 ~ googleRedirectionURL ~ request:", request)
+  console.log(
+    "🚀 ~ file: userController.mjs:64 ~ googleRedirectionURL ~ request:",
+    request
+  );
   //   //! Define payload data for making a POST request to Google's token endpoint
   let payLoadData = {
     url: "https://www.googleapis.com/oauth2/v4/token",
@@ -93,13 +99,28 @@ export const googleRedirectionURL = async (req, res, next) => {
     ] = `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenData.access_token}`;
     //     //! Make a GET request to Google's user profile endpoint to retrieve the user's data
     let UserData = await axios.get(request.url);
-    console.log({ emailData: UserData.data });
 
-    res.redirect('http://localhost:3000/dash')
+    UserData.data["token"] = tokenData.access_token;
+    const user1 = await userGoogleSignInModel.findOne({ email: UserData.data.email });
+    console.log("🚀 ~ file: userController.mjs:105 ~ googleRedirectionURL ~ user1:", user1)
+    
+    if (!user1) {
+      //! Create new user model instance by passing the retrieved user details
+      await userGoogleSignInModel.create(UserData.data);
+      console.log("used created in database");
+    } else {
+      //! Update existing user model instance by passing the retrieved user details
+      await userGoogleSignInModel.updateOne(
+        { email: UserData.data.email },
+        { $set: { "token": UserData.data.token } }
+      );
+      console.log("user updated in database");
+    }
+    console.log({ emailData: UserData.data });
+    res.redirect("http://localhost:3000/dash");
     //     //! Send the user's profile data as a response to the client
-    // res.send(UserData.data);
   } catch (error) {
     console.log("Error In Getting Data In GoogleSignIn...", error.message);
-    next(error)
+    next(error);
   }
 };
