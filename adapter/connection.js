@@ -3,8 +3,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 mongoose
-  .connect(process.env.REACT_APP_DEV_DB_URL)
-  .then((result) => {
+  .connect(process.env.REACT_APP_DEV_DB_URL) 
+  .then(() => {
       console.log("connected to database");
     console.log("🚀 ~ file: connection.js:5 ~ .then ~ result:");
   })

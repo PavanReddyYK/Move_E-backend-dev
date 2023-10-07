@@ -6,10 +6,7 @@ const userGoogleSignUpModel = new Schema({
   given_name: String,
   family_name: String,
   picture: String,
-  email: {
-    type: String,
-    unique: true,
-  },
+  email: String,
   email_verified: Boolean,
   local: String,
   token: String,

@@ -2,6 +2,8 @@ import { OAuth2Client } from "google-auth-library";
 import userMOdel from "../model/userModel.mjs";
 import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 import axios from "axios";
+import { getEncryptedPassword } from "../helper/helper.mjs";
+import { inviteMail } from "../helper/mail.mjs";
 
 export const registerUser = async (req, res, next) => {
   const { name, email, age, state, country, password } = req.body;
@@ -13,18 +15,31 @@ export const registerUser = async (req, res, next) => {
     country: country,
     password: password,
   };
+  console.log("🚀 ~ file: userController.mjs:18 ~ registerUser ~ userData:", userData)
   try {
-    const user = await userMOdel(userData);
-    const savedUser = await user.save();
-    res.status(200).json({
-      error: false,
-      status: "successful",
-      data: { id: savedUser.id, email: savedUser.email },
-    });
-    console.log("🚀 ~ file: userController.mjs:11 ~ registerUser ~ userData:", {
-      id: savedUser.id,
-      email: savedUser.email,
-    });
+    const userEmailExist = 0 // await userMOdel.findOne({ email }).timeout(2000);
+    console.log("🚀 ~ file: userController.mjs:21 ~ registerUser ~ userEmailExist:", userEmailExist)
+    if (userEmailExist) {
+      return res.status(409).json("This Email Already Exist");
+    } else {
+      let user = await userMOdel(userData);
+      user.password = getEncryptedPassword(password)
+      const savedUser = await user.save();
+
+      inviteMail(user.name,user.email)
+      res.status(200).json({
+        error: false,
+        status: "successful",
+        data: { id: savedUser.id, email: savedUser.email },
+      });
+      console.log(
+        "🚀 ~ file: userController.mjs:11 ~ registerUser ~ userData:",
+        {
+          id: savedUser.id,
+          email: savedUser.email,
+        }
+      );
+    }
   } catch (error) {
     console.log("error", error.message);
     next(error);
@@ -101,9 +116,14 @@ export const googleRedirectionURL = async (req, res, next) => {
     let UserData = await axios.get(request.url);
 
     UserData.data["token"] = tokenData.access_token;
-    const user1 = await userGoogleSignInModel.findOne({ email: UserData.data.email });
-    console.log("🚀 ~ file: userController.mjs:105 ~ googleRedirectionURL ~ user1:", user1)
-    
+    const user1 = await userGoogleSignInModel.findOne({
+      email: UserData.data.email,
+    });
+    console.log(
+      "🚀 ~ file: userController.mjs:105 ~ googleRedirectionURL ~ user1:",
+      user1
+    );
+
     if (!user1) {
       //! Create new user model instance by passing the retrieved user details
       await userGoogleSignInModel.create(UserData.data);
@@ -112,7 +132,7 @@ export const googleRedirectionURL = async (req, res, next) => {
       //! Update existing user model instance by passing the retrieved user details
       await userGoogleSignInModel.updateOne(
         { email: UserData.data.email },
-        { $set: { "token": UserData.data.token } }
+        { $set: { token: UserData.data.token } }
       );
       console.log("user updated in database");
     }
