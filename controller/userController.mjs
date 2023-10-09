@@ -1,15 +1,16 @@
 import { OAuth2Client } from "google-auth-library";
-import userMOdel from "../model/userModel.mjs";
-import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 import axios from "axios";
+import jwt from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
+
 import {
   createOtp,
   getDecryptPassword,
   getEncryptedPassword,
 } from "../helper/helper.mjs";
 import { inviteMail, sendOtp } from "../helper/mail.mjs";
-import jwt from "jsonwebtoken";
-import bcryptjs from "bcryptjs";
+import userMOdel from "../model/userModel.mjs";
+import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 
 export const registerUser = async (req, res, next) => {
   const { name, email, age, state, country, password } = req.body;
@@ -62,7 +63,7 @@ export const loginUser = async (req, res, next) => {
         password === getDecryptPassword(user.password) ? true : false;
       if (!isMatch) {
         console.log("Incorrect Password");
-        res.status(402).json({ data: "ok", message: "Invalid Email" });
+        res.status(402).json({ data: "ok", message: "Invalid Email or Password" });
       } else {
         const token = jwt.sign(
           { email: user.email, name: user.name },
@@ -97,23 +98,49 @@ export const forgotPassword = async (req, res, next) => {
   }
 };
 
-export const verifyPassword = async (req, res, next) => {
+export const verifyOtp = async (req, res, next) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, new_password } = req.body;
     const user = await userMOdel.findOne({ email });
     if (!user) {
-      console.log("Email Not Found")
+      console.log("Email Not Found");
       res.status(403).json({ message: "Email Not Found", data: "ok" });
     } else {
-      const isMatch =await bcryptjs.compare(otp,user.otp)
-      if(!isMatch){
-        console.log("Invalid OTP")
-        res.status(500).json({message:"invalid otp",data:'ok'})
-      }else{
-        const { hashedOTP, OTP } = await createOtp();
-      await userMOdel.findOneAndUpdate({ email }, { $set: { otp: hashedOTP } });
-      console.log("Validation Successful------------- OTP updated");
-      res.status(200).json({message:"Validation Successful",data:"Ok"})
+      const isMatch = await bcryptjs.compare(otp, user.otp);
+      if (!isMatch) {
+        console.log("Invalid OTP");
+        res.status(500).json({ message: "invalid otp", data: "ok" });
+      } else {
+        const sameAsOld = new_password === getDecryptPassword(user.password);
+        console.log(
+          "🚀 ~ file: userController.mjs:115 ~ verifyOtp ~ newPassword:",
+          sameAsOld
+        );
+        if (sameAsOld) {
+          console.log("New password cannot be the same as old password.");
+          res
+            .status(500)
+            .json({
+              message: "New password cannot be the same as old password.",
+              data: "ok",
+            });
+        } else {
+          const encrypted_password = getEncryptedPassword(new_password);
+          const { hashedOTP, OTP } = await createOtp();
+          await userMOdel.findOneAndUpdate(
+            { email },
+            { $set: { otp: hashedOTP, password: encrypted_password } }
+          );
+          console.log(
+            "Validation Successful-------------- OTP & Password updated"
+          );
+          res
+            .status(200)
+            .json({
+              message: "Validation Successful, OTP & Password updated",
+              data: "Ok",
+            });
+        }
       }
     }
   } catch (error) {

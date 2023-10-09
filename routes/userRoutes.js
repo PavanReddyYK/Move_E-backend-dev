@@ -5,7 +5,7 @@ import {
   googleSignUp,
   loginUser,
   registerUser,
-  verifyPassword,
+  verifyOtp,
 } from "../controller/userController.mjs";
 
 let routes = express.Router();
@@ -13,7 +13,7 @@ let routes = express.Router();
 routes.post("/registerUser", registerUser);
 routes.post("/LogInUser", loginUser);
 routes.post("/forgotPassword", forgotPassword);
-routes.post("/verifyPassword", verifyPassword);
+routes.post("/verifyOtp", verifyOtp);
 routes.post("/googleSignUp", googleSignUp);
 routes.get("/googleRedirectionURL", googleRedirectionURL);
 
