@@ -25,6 +25,12 @@ const userSchema = new Schema(
     country: {
       type: String,
     },
+    otp:{
+      type:String
+    },
+    token:{
+      type:String
+    },
     password: {
       type: String,
       minLength: [4, "password should be minimum of 4 characters"],

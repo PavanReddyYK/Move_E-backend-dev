@@ -2,8 +2,14 @@ import { OAuth2Client } from "google-auth-library";
 import userMOdel from "../model/userModel.mjs";
 import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 import axios from "axios";
-import { getEncryptedPassword } from "../helper/helper.mjs";
-import { inviteMail } from "../helper/mail.mjs";
+import {
+  createOtp,
+  getDecryptPassword,
+  getEncryptedPassword,
+} from "../helper/helper.mjs";
+import { inviteMail, sendOtp } from "../helper/mail.mjs";
+import jwt from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
 
 export const registerUser = async (req, res, next) => {
   const { name, email, age, state, country, password } = req.body;
@@ -15,18 +21,17 @@ export const registerUser = async (req, res, next) => {
     country: country,
     password: password,
   };
-  console.log("🚀 ~ file: userController.mjs:18 ~ registerUser ~ userData:", userData)
   try {
-    const userEmailExist = 0 // await userMOdel.findOne({ email }).timeout(2000);
-    console.log("🚀 ~ file: userController.mjs:21 ~ registerUser ~ userEmailExist:", userEmailExist)
+    const userEmailExist = await userMOdel.findOne({ email });
     if (userEmailExist) {
+      console.log("This Email Already Exist");
       return res.status(409).json("This Email Already Exist");
     } else {
       let user = await userMOdel(userData);
-      user.password = getEncryptedPassword(password)
+      user.password = getEncryptedPassword(password);
       const savedUser = await user.save();
 
-      inviteMail(user.name,user.email)
+      inviteMail(user.name, user.email);
       res.status(200).json({
         error: false,
         status: "successful",
@@ -42,6 +47,76 @@ export const registerUser = async (req, res, next) => {
     }
   } catch (error) {
     console.log("error", error.message);
+    next(error);
+  }
+};
+
+export const loginUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = await userMOdel.findOne({ email });
+    if (!user) {
+      return res.status(403).json({ message: "Access Denied" });
+    } else {
+      const isMatch =
+        password === getDecryptPassword(user.password) ? true : false;
+      if (!isMatch) {
+        console.log("Incorrect Password");
+        res.status(402).json({ data: "ok", message: "Invalid Email" });
+      } else {
+        const token = jwt.sign(
+          { email: user.email, name: user.name },
+          process.env.REACT_APP_PRIVATE_KEY,
+          { expiresIn: "10s" }
+        );
+        res.status(200).json({ message: "SignIn Successful", token: token });
+        console.log("SigIn Successful");
+      }
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await userMOdel.findOne({ email });
+    if (!user) {
+      res.status(403).json({ message: "Email Not Found", data: "ok" });
+    } else {
+      const { hashedOTP, OTP } = await createOtp();
+      console.log("hashedOTP", hashedOTP, "otttp", OTP);
+      sendOtp(user.email, OTP, user.name);
+      await userMOdel.findOneAndUpdate({ email }, { $set: { otp: hashedOTP } });
+      console.log("updated otp");
+      res.status(200).json({ message: "otp sent and updated", data: "ok" });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyPassword = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await userMOdel.findOne({ email });
+    if (!user) {
+      console.log("Email Not Found")
+      res.status(403).json({ message: "Email Not Found", data: "ok" });
+    } else {
+      const isMatch =await bcryptjs.compare(otp,user.otp)
+      if(!isMatch){
+        console.log("Invalid OTP")
+        res.status(500).json({message:"invalid otp",data:'ok'})
+      }else{
+        const { hashedOTP, OTP } = await createOtp();
+      await userMOdel.findOneAndUpdate({ email }, { $set: { otp: hashedOTP } });
+      console.log("Validation Successful------------- OTP updated");
+      res.status(200).json({message:"Validation Successful",data:"Ok"})
+      }
+    }
+  } catch (error) {
     next(error);
   }
 };

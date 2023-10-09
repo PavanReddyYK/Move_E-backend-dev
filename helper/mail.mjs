@@ -15,7 +15,7 @@ export const inviteMail = (name, email) => {
     to: email,
     from: org_mail,
     subject: `Thank You for Registering with ${app_name}`,
-    html: `<h3>Hello ${name},</h3><br/>
+    html: `<h5>Hello ${name},</h5><br/>
                <p style="font-size:20px;">Thank you for registering with us.</p>
                <p>We look forward to providing all the necessary facilities so that we can connect for a better future.</p>`,
   };
@@ -33,7 +33,7 @@ export const sendOtp = async (email, otp, name) => {
     from: org_mail,
     to: email,
     subject: "OTP Mail",
-    html: `<h1>Hi ${name}, Your OTP for ${app_name} Application is ${otp}</h1>`,
+    html: `<h5>Hi ${name}, Your OTP for ${app_name} Application is ${otp}</h5>`,
   };
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) {

@@ -32,7 +32,6 @@ export const getDecryptPassword = (password) => {
 export const createOtp = async () => {
   try{
       let OTP = Math.floor(Math.random() * 899999 + 100000).toString();
-      console.log("🚀 ~ file: helper.mjs:35 ~ createOtp ~ otp:", OTP)
       let salt = await bcryptjs.genSalt(10);
       let hashedOTP = await bcryptjs.hash(OTP, salt);
       return {hashedOTP,OTP};
