@@ -123,10 +123,20 @@ export const verifyOtp = async (req, res, next) => {
         } else {
           const encrypted_password = getEncryptedPassword(new_password);
           const { hashedOTP, OTP } = await createOtp();
-          const token = jwt.sign({email:user.email,name:user.name},process.env.REACT_APP_PRIVATE_KEY,{expiresIn:'10m'})
+          const token = jwt.sign(
+            { email: user.email, name: user.name },
+            process.env.REACT_APP_PRIVATE_KEY,
+            { expiresIn: "10m" }
+          );
           await userMOdel.findOneAndUpdate(
             { email },
-            { $set: { otp: hashedOTP, password: encrypted_password, token:token } }
+            {
+              $set: {
+                otp: hashedOTP,
+                password: encrypted_password,
+                token: token,
+              },
+            }
           );
           console.log(
             "Validation Successful:-------------- OTP, password & token updated"
@@ -178,10 +188,6 @@ export const googleSignUp = async (req, res, next) => {
 
 export const googleRedirectionURL = async (req, res, next) => {
   let request = req.query;
-  console.log(
-    "🚀 ~ file: userController.mjs:64 ~ googleRedirectionURL ~ request:",
-    request
-  );
   //   //! Define payload data for making a POST request to Google's token endpoint
   let payLoadData = {
     url: "https://www.googleapis.com/oauth2/v4/token",
@@ -234,9 +240,9 @@ export const googleRedirectionURL = async (req, res, next) => {
         { $set: { token: token } }
       );
     }
-    console.log("user updated in database",{ emailData: UserData.data });
-    res.redirect(`http://localhost:3000/dash/${UserData.data.token}`);
+    console.log("user updated in database", { emailData: UserData.data });
     //     //! Send the user's profile data as a response to the client
+    res.redirect(`http://localhost:3000/dash/${UserData.data.token}`);
   } catch (error) {
     console.log("Error In Getting Data In GoogleSignIn...", error.message);
     next(error);
