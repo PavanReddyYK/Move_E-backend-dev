@@ -63,12 +63,14 @@ export const loginUser = async (req, res, next) => {
         password === getDecryptPassword(user.password) ? true : false;
       if (!isMatch) {
         console.log("Incorrect Password");
-        res.status(402).json({ data: "ok", message: "Invalid Email or Password" });
+        res
+          .status(402)
+          .json({ data: "ok", message: "Invalid Email or Password" });
       } else {
         const token = jwt.sign(
           { email: user.email, name: user.name },
           process.env.REACT_APP_PRIVATE_KEY,
-          { expiresIn: "10s" }
+          { expiresIn: "10m" }
         );
         res.status(200).json({ message: "SignIn Successful", token: token });
         console.log("SigIn Successful");
@@ -112,34 +114,28 @@ export const verifyOtp = async (req, res, next) => {
         res.status(500).json({ message: "invalid otp", data: "ok" });
       } else {
         const sameAsOld = new_password === getDecryptPassword(user.password);
-        console.log(
-          "🚀 ~ file: userController.mjs:115 ~ verifyOtp ~ newPassword:",
-          sameAsOld
-        );
         if (sameAsOld) {
           console.log("New password cannot be the same as old password.");
-          res
-            .status(500)
-            .json({
-              message: "New password cannot be the same as old password.",
-              data: "ok",
-            });
+          res.status(500).json({
+            message: "New password cannot be the same as old password.",
+            data: "ok",
+          });
         } else {
           const encrypted_password = getEncryptedPassword(new_password);
           const { hashedOTP, OTP } = await createOtp();
+          const token = jwt.sign({email:user.email,name:user.name},process.env.REACT_APP_PRIVATE_KEY,{expiresIn:'10m'})
           await userMOdel.findOneAndUpdate(
             { email },
-            { $set: { otp: hashedOTP, password: encrypted_password } }
+            { $set: { otp: hashedOTP, password: encrypted_password, token:token } }
           );
           console.log(
-            "Validation Successful-------------- OTP & Password updated"
+            "Validation Successful:-------------- OTP, password & token updated"
           );
-          res
-            .status(200)
-            .json({
-              message: "Validation Successful, OTP & Password updated",
-              data: "Ok",
-            });
+          res.status(200).json({
+            message: "Validation Successful: OTP, password & token updated",
+            token: token,
+            data: "Ok",
+          });
         }
       }
     }
@@ -217,15 +213,16 @@ export const googleRedirectionURL = async (req, res, next) => {
     //     //! Make a GET request to Google's user profile endpoint to retrieve the user's data
     let UserData = await axios.get(request.url);
 
-    UserData.data["token"] = tokenData.access_token;
+    const token = jwt.sign(
+      { email: UserData.data.email, name: UserData.data.name },
+      process.env.REACT_APP_PRIVATE_KEY,
+      { expiresIn: "10m" }
+    );
+
+    UserData.data["token"] = token;
     const user1 = await userGoogleSignInModel.findOne({
       email: UserData.data.email,
     });
-    console.log(
-      "🚀 ~ file: userController.mjs:105 ~ googleRedirectionURL ~ user1:",
-      user1
-    );
-
     if (!user1) {
       //! Create new user model instance by passing the retrieved user details
       await userGoogleSignInModel.create(UserData.data);
@@ -234,12 +231,11 @@ export const googleRedirectionURL = async (req, res, next) => {
       //! Update existing user model instance by passing the retrieved user details
       await userGoogleSignInModel.updateOne(
         { email: UserData.data.email },
-        { $set: { token: UserData.data.token } }
+        { $set: { token: token } }
       );
-      console.log("user updated in database");
     }
-    console.log({ emailData: UserData.data });
-    res.redirect("http://localhost:3000/dash");
+    console.log("user updated in database",{ emailData: UserData.data });
+    res.redirect(`http://localhost:3000/dash/${UserData.data.token}`);
     //     //! Send the user's profile data as a response to the client
   } catch (error) {
     console.log("Error In Getting Data In GoogleSignIn...", error.message);
