@@ -18,8 +18,8 @@ app.use(cors());
 import userRoutes from "./routes/userRoutes.js";
 app.use('/v1/user/',userRoutes)
 
-
-
+import movieRouter from "./routes/movieRoutes.js";
+app.use('/v1/movie/',movieRouter)
 
 
 
@@ -33,6 +33,7 @@ app.use("*",(req,res,next)=>{
 app.use( (err,req,res,next)=>{
     res.status(400).json({error:true,message:err.message,data:"ok"})
 } )
+
 
 app.set('port',process.env.REACT_APP_PORT)
 const server = http.createServer(app)

@@ -55,16 +55,17 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await userMOdel.findOne({ email });
+    let user = await userMOdel.findOne({ email });
     if (!user) {
-      return res.status(403).json({ message: "Access Denied" });
+      return res.status(401)
+      .json({ data: "ok", message: "Invalid Email or Password" });
     } else {
       const isMatch =
         password === getDecryptPassword(user.password) ? true : false;
       if (!isMatch) {
         console.log("Incorrect Password");
         res
-          .status(402)
+          .status(401)
           .json({ data: "ok", message: "Invalid Email or Password" });
       } else {
         const token = jwt.sign(
@@ -72,7 +73,13 @@ export const loginUser = async (req, res, next) => {
           process.env.REACT_APP_PRIVATE_KEY,
           { expiresIn: "10m" }
         );
-        res.status(200).json({ message: "SignIn Successful", token: token });
+        await userMOdel.updateOne(
+          { email: user.email },
+          { $set: { token: token } }
+        );
+        delete user.password
+        console.log("🚀 ~ file: userController.mjs:81 ~ loginUser ~ user:", user)
+        res.status(200).json({ message: "SignIn Successful", token: token, user:user});
         console.log("SigIn Successful");
       }
     }
@@ -141,9 +148,11 @@ export const verifyOtp = async (req, res, next) => {
           console.log(
             "Validation Successful:-------------- OTP, password & token updated"
           );
+          delete user.password
           res.status(200).json({
             message: "Validation Successful: OTP, password & token updated",
             token: token,
+            user:user,
             data: "Ok",
           });
         }
@@ -218,6 +227,7 @@ export const googleRedirectionURL = async (req, res, next) => {
     ] = `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenData.access_token}`;
     //     //! Make a GET request to Google's user profile endpoint to retrieve the user's data
     let UserData = await axios.get(request.url);
+    console.log("🚀 ~ file: userController.mjs:230 ~ googleRedirectionURL ~ UserData:", UserData)
 
     const token = jwt.sign(
       { email: UserData.data.email, name: UserData.data.name },

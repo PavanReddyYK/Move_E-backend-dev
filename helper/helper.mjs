@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import bcryptjs from "bcryptjs";
+
 export const getEncryptedPassword = (password) => {
   try {
     const encrypted_key = crypto.createCipher(

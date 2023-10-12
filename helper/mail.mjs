@@ -15,7 +15,7 @@ export const inviteMail = (name, email) => {
     to: email,
     from: org_mail,
     subject: `Thank You for Registering with ${app_name}`,
-    html: `<h5>Hello ${name},</h5><br/>
+    html: `<h3>Hello ${name},</h3><br/>
                <p style="font-size:20px;">Thank you for registering with us.</p>
                <p>We look forward to providing all the necessary facilities so that we can connect for a better future.</p>`,
   };

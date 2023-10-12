@@ -11,12 +11,12 @@ import {
 let routes = express.Router();
 
 routes.post("/registerUser", registerUser);
-routes.post("/LogInUser", loginUser);
+routes.post("/logInUser", loginUser);
 routes.post("/forgotPassword", forgotPassword);
 routes.post("/verifyOtp", verifyOtp);
 routes.post("/googleSignUp", googleSignUp);
 routes.get("/googleRedirectionURL", googleRedirectionURL);
 
-routes.post("/loginUser", registerUser);
+// routes.post("/loginUser", registerUser);
 
 export default routes;

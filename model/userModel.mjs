@@ -4,7 +4,6 @@ const userSchema = new Schema(
   {
     name: {
       type: String,
-      required: true,
       minLength: [4, "name should be minimum of 4 characters"],
       maxLength: [15, "name should not exceed 15 characters"],
       required: true,
@@ -26,10 +25,12 @@ const userSchema = new Schema(
       type: String,
     },
     otp:{
-      type:String
+      type:String,
+      default:null
     },
     token:{
-      type:String
+      type:String,
+      default: null
     },
     password: {
       type: String,

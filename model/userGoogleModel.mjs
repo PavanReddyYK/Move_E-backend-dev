@@ -10,6 +10,7 @@ const userGoogleSignUpModel = new Schema({
   email_verified: Boolean,
   local: String,
   token: String,
-});
+},
+{ timestamps: true });
 
 export default model("userGoogleSignIn", userGoogleSignUpModel);
