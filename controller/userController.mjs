@@ -252,7 +252,7 @@ export const googleRedirectionURL = async (req, res, next) => {
     }
     console.log("user updated in database", { emailData: UserData.data });
     //     //! Send the user's profile data as a response to the client
-    res.redirect(`http://localhost:3000/dash/${UserData.data.token}`);
+    res.redirect(`http://localhost:3000/${UserData.data.token}`);
   } catch (error) {
     console.log("Error In Getting Data In GoogleSignIn...", error.message);
     next(error);
