@@ -88,6 +88,18 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+export const logoutUser = async (req, res, next)=>{
+  try{
+    const {token} = req.body;
+    const {email} = jwt.verify(token, process.env.REACT_APP_PRIVATE_KEY)
+    
+  }
+  catch(error){
+    console.log("error", error.message);
+    next(error);
+    }
+}
+
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;

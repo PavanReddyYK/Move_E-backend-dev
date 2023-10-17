@@ -66,6 +66,8 @@ export const fetchMovieById = async (req, res, next) => {
 export const addMovieToWatchList = async (req, res, next) => {
   try {
     const { email, movieId } = req.body;
+    // const { email1} = req.data.email;
+    // console.log("🚀 ~ file: movieController.mjs:70 ~ addMovieToWatchList ~ email1:", email1)
     console.log("email::::", email + "    movieid:::", movieId);
 
     const watchList = await watchListModel.findOneAndUpdate(
