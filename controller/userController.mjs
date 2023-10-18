@@ -25,26 +25,33 @@ export const registerUser = async (req, res, next) => {
   try {
     const userEmailExist = await userMOdel.findOne({ email });
     if (userEmailExist) {
-      console.log("This Email Already Exist");
+      console.log("This Email Already Exist", userEmailExist.email);
       return res.status(409).json("This Email Already Exist");
     } else {
       let user = await userMOdel(userData);
       user.password = getEncryptedPassword(password);
+      const token = jwt.sign(
+        { email: user.email, name: user.name },
+        process.env.REACT_APP_PRIVATE_KEY,
+        { expiresIn: "10m" }
+      );
+      user.token = token
       const savedUser = await user.save();
 
       inviteMail(user.name, user.email);
-      res.status(200).json({
-        error: false,
-        status: "successful",
-        data: { id: savedUser.id, email: savedUser.email },
-      });
       console.log(
         "🚀 ~ file: userController.mjs:11 ~ registerUser ~ userData:",
         {
           id: savedUser.id,
           email: savedUser.email,
+          token
         }
       );
+      res.status(200).json({
+        error: false,
+        status: "successful",
+        user: { user:savedUser, email: savedUser.email, token},
+      });
     }
   } catch (error) {
     console.log("error", error.message);
@@ -90,12 +97,14 @@ export const loginUser = async (req, res, next) => {
 
 export const logoutUser = async (req, res, next)=>{
   try{
-    const {token} = req.body;
-    const {email} = jwt.verify(token, process.env.REACT_APP_PRIVATE_KEY)
-    
+    const {email} = req.body;
+    await userMOdel.findOneAndUpdate({email},
+      {$set :{'token':null}})
+      console.log("user loggedOut")
+      res.json({error:true, message:"logOut successfully"})
   }
   catch(error){
-    console.log("error", error.message);
+    console.log("error logging out", error.message);
     next(error);
     }
 }
