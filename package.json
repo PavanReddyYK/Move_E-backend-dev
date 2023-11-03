@@ -23,7 +23,7 @@
     "google-auth-library": "^9.1.0",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.5.4",
+    "mongoose": "7.6.3",
     "nodemailer": "^6.9.5",
     "nodemon": "^3.0.1"
   }
