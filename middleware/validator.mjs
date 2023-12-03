@@ -3,7 +3,6 @@ import userMOdel from "../model/userModel.mjs";
 
 export const validate = async (req, res, next) => {
   const token = req.header("Authorization");
-  console.log("🚀 ~ file: validator.js:6 ~ validate ~ token:", token)
   const request = req.body;
 
   const payload = jwt.verify(token, process.env.REACT_APP_PRIVATE_KEY);

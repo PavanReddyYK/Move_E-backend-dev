@@ -72,14 +72,26 @@ export const addMovieToWatchList = async (req, res, next) => {
 
     const watchList = await watchListModel.findOneAndUpdate(
       { email },
-      { $push: { movies:  movieId  } },
+      { $push: { movies: movieId } },
       { new: true, upsert: true } // The upsert option will create the user if not found
     );
 
-    console.log('watchList', watchList);
+    console.log("watchList", watchList);
     res.status(200).json({ message: "Added successfully", error: false });
   } catch (error) {
     console.log("Error adding movie to watchList: ", error);
     next(error);
+  }
+};
+
+export const fetchMovieWatchList = async (req, res, next) => {
+  const { email } = req.body;
+  console.log("reqq!21", req.body);
+  const watchList = await watchListModel.findOne({ email });
+
+  if (watchList != null) {
+    res.status(200).json({ watchList });
+  } else {
+    res.status(200).json({ message: "none" });
   }
 };

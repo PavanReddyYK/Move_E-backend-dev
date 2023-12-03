@@ -13,16 +13,17 @@ import userMOdel from "../model/userModel.mjs";
 import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 
 export const registerUser = async (req, res, next) => {
-  const { name, email, age, state, country, password } = req.body;
-  const userData = {
-    name: name,
-    email: email,
-    age: age,
-    state: state,
-    country: country,
-    password: password,
-  };
   try {
+    console.log("registerUser",req.body)
+    const { name, email, age, state, country, password } = req.body;
+    const userData = {
+      name: name,
+      email: email,
+      age: age,
+      state: state,
+      country: country,
+      password: password,
+    };
     const userEmailExist = await userMOdel.findOne({ email });
     if (userEmailExist) {
       console.log("This Email Already Exist", userEmailExist.email);
@@ -33,7 +34,7 @@ export const registerUser = async (req, res, next) => {
       const token = jwt.sign(
         { email: user.email, name: user.name },
         process.env.REACT_APP_PRIVATE_KEY,
-        { expiresIn: "10m" }
+        // { expiresIn: "50m" }
       );
       user.token = token
       const savedUser = await user.save();
@@ -61,6 +62,7 @@ export const registerUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
   try {
+    console.log("loginUser",req.body)
     const { email, password } = req.body;
     let user = await userMOdel.findOne({ email });
     if (!user) {
@@ -78,14 +80,13 @@ export const loginUser = async (req, res, next) => {
         const token = jwt.sign(
           { email: user.email, name: user.name },
           process.env.REACT_APP_PRIVATE_KEY,
-          { expiresIn: "10m" }
+          // { expiresIn: "50m" }
         );
         await userMOdel.updateOne(
           { email: user.email },
           { $set: { token: token } }
         );
         delete user.password
-        console.log("🚀 ~ file: userController.mjs:81 ~ loginUser ~ user:", user)
         res.status(200).json({ message: "SignIn Successful", token: token, user:user});
         console.log("SigIn Successful");
       }
@@ -97,6 +98,7 @@ export const loginUser = async (req, res, next) => {
 
 export const logoutUser = async (req, res, next)=>{
   try{
+    console.log("loginUser",req.body)
     const {email} = req.body;
     await userMOdel.findOneAndUpdate({email},
       {$set :{'token':null}})
@@ -154,7 +156,7 @@ export const verifyOtp = async (req, res, next) => {
           const token = jwt.sign(
             { email: user.email, name: user.name },
             process.env.REACT_APP_PRIVATE_KEY,
-            { expiresIn: "10m" }
+            // { expiresIn: "50m" }
           );
           await userMOdel.findOneAndUpdate(
             { email },
