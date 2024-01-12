@@ -8,7 +8,7 @@ import {
   getDecryptPassword,
   getEncryptedPassword,
 } from "../helper/helper.mjs";
-import { inviteMail, sendOtp } from "../helper/mail.mjs";
+import { inviteMail, sendOtp, sentMail } from "../helper/mail.mjs";
 import userMOdel from "../model/userModel.mjs";
 import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 
@@ -192,8 +192,8 @@ export const googleSignUp = async (req, res, next) => {
     // ! Set the redirection endpoint for Google to redirect back to after authentication
     request[
       "redirectionURL"
-    ] = `http://localhost:${process.env.REACT_APP_PORT}/v1/user/googleRedirectionURL`;
-    // request["redirectionURL"] = `http://localhost:3000/dash`;
+    ] = `${process.env.REACT_APP_Base_URL_FE}/${UserData.data.token}`;
+    // ] = `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL`;
 
     // ! Create an OAuth2Client instance with your Google OAuth2 credentials
     const oAuth2Client = new OAuth2Client(
@@ -227,8 +227,8 @@ export const googleRedirectionURL = async (req, res, next) => {
       "code=" +
       request.code +
       "&redirect_uri=" +
-      `http://localhost:${process.env.REACT_APP_PORT}/v1/user/googleRedirectionURL` +
-      // `http://localhost:3000/dash` +
+      `${process.env.REACT_APP_Base_URL_FE}` +
+      // `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL` +
       "&client_id=" +
       `${process.env.REACT_APP_OAuth2Client_CLIENT_ID}` +
       "&client_secret=" +
@@ -239,6 +239,7 @@ export const googleRedirectionURL = async (req, res, next) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   };
+  console.log("payyyyyyyyyyLOad",payLoadData)
   try {
     //     //! Send a POST request to Google's token endpoint to exchange the code for an access token
     let Response = await axios(payLoadData);
@@ -255,7 +256,7 @@ export const googleRedirectionURL = async (req, res, next) => {
     const token = jwt.sign(
       { email: UserData.data.email, name: UserData.data.name },
       process.env.REACT_APP_PRIVATE_KEY,
-      { expiresIn: "10m" }
+      { expiresIn: "30m" }
     );
 
     UserData.data["token"] = token;
@@ -264,8 +265,8 @@ export const googleRedirectionURL = async (req, res, next) => {
     });
     if (!user1) {
       //! Create new user model instance by passing the retrieved user details
-      await userGoogleSignInModel.create(UserData.data);
-      console.log("used created in database");
+      await userGoogleSignInModel.create(UserData.data.emailData.email);
+      console.log("used created in database", { emailData: UserData.data });
     } else {
       //! Update existing user model instance by passing the retrieved user details
       await userGoogleSignInModel.updateOne(
@@ -273,11 +274,24 @@ export const googleRedirectionURL = async (req, res, next) => {
         { $set: { token: token } }
       );
     }
-    console.log("user updated in database", { emailData: UserData.data });
+    console.log("user updated in database", { emailData: UserData.data.emailData.email });
     //     //! Send the user's profile data as a response to the client
-    res.redirect(`http://localhost:3000/${UserData.data.token}`);
+    // res.redirect(`http://localhost:3000/${UserData.data.token}`);
+    res.redirect(`${process.env.REACT_APP_Base_URL_FE}/${UserData.data.token}`);
   } catch (error) {
     console.log("Error In Getting Data In GoogleSignIn...", error.message);
     next(error);
   }
 };
+
+export const contactMail = async (req, res, next) => {
+  try{
+    const {userMail, userName, subject, mailContent} = req.body;
+    
+    const response = await sentMail(userMail,userName,subject,mailContent);
+    res.status(200).json({error: false, message:`email sent successfully to ${userMail}`})
+  }catch(error){
+    console.log("error in contactMail function",error)
+    next(error)
+  }
+}

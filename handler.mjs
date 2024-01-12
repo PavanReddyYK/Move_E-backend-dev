@@ -21,6 +21,8 @@ app.use('/v1/user/',userRoutes)
 import movieRouter from "./routes/movieRoutes.js";
 app.use('/v1/movie/',movieRouter)
 
+// import pdfRouter from "./routes/pdfRoutes.js"
+// app.use('/v1/pdf/',pdfRouter)
 
 
 
