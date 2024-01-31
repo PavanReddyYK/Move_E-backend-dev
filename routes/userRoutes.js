@@ -8,8 +8,8 @@ import {
   logoutUser,
   registerUser,
   verifyOtp,
-} from "../controller/userController.mjs";
-import { validate } from "../middleware/validator.mjs";
+} from "../src/controller/userController.mjs";
+import { validate } from "../src/middleware/validator.mjs";
 
 let routes = express.Router();
 

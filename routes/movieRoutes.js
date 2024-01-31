@@ -1,13 +1,13 @@
 import express from "express";
 
+import { validate } from "../src/middleware/validator.mjs";
 import {
   addMovieToWatchList,
   fetchAllMovies,
   fetchMovieById,
   fetchMovieWatchList,
   removeWatchlist,
-} from "../controller/movieController.mjs";
-import { validate } from "../middleware/validator.mjs";
+} from "../src/controller/movieController.mjs";
 
 let routes = express.Router();
 

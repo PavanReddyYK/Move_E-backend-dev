@@ -1,6 +1,7 @@
 import movieModel from "../model/movieModel.mjs";
 import watchListModel from "../model/watchListModel.mjs";
 
+
 export const fetchAllMovies = async (req, res, next) => {
   try {
     const movies = await movieModel.find({
@@ -49,10 +50,6 @@ export const fetchMovieById = async (req, res, next) => {
         directors: movie.directors,
         writers: movie.writers,
       };
-      console.log(
-        "🚀 ~ file: movieController.mjs:51 ~ fetchMovieById ~ movieData:",
-        movieData
-      );
       res
         .status(200)
         .json({ message: `Successfully fetched movie by Id:${id}`, movieData });
@@ -85,13 +82,40 @@ export const addMovieToWatchList = async (req, res, next) => {
 };
 
 export const fetchMovieWatchList = async (req, res, next) => {
-  const { email } = req.body;
-  console.log("reqq!21", req.body);
-  const watchList = await watchListModel.findOne({ email });
+  try{
+    const { email } = req.body;
+    console.log("reqq!21", req.body);
+    const watchList = await watchListModel.findOne({ email });
+  
+    if (watchList != null) {
+      res.status(200).json({ watchList });
+    } else {
+      res.status(200).json({ message: "none" });
+    }
+  }catch(error){
+    console.log('fetchMovieWatchList error',error)
+    next(error);
+  }
+};
 
-  if (watchList != null) {
-    res.status(200).json({ watchList });
-  } else {
-    res.status(200).json({ message: "none" });
+import mongoose from 'mongoose';
+
+export const removeWatchlist = async (req, res, next) => {
+  try {
+    const { email, movieId } = req.body;
+
+    // Convert movieId to ObjectId
+    const movieObjectId = mongoose.Types.ObjectId(movieId);
+
+    const response = await movieModel.updateOne(
+      { email },
+      { $pull: { movies: movieObjectId } }
+    );
+
+    console.log(response);
+    res.status(200).json(response);
+  } catch (error) {
+    console.log("removeWatchlist error", error);
+    next(error);
   }
 };

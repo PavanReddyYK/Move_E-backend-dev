@@ -10,7 +10,7 @@ app.use(bodyParser.json())
 import dotenv from 'dotenv';
 dotenv.config();
 
-import './adapter/connection.js'
+import './dbConfig.js'
 
 import cors from "cors";
 app.use(cors());
