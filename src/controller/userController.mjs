@@ -287,8 +287,10 @@ export const googleRedirectionURL = async (req, res, next) => {
 export const contactMail = async (req, res, next) => {
   try{
     const {userMail, userName, subject, mailContent} = req.body;
+    console.log("first---------",req.body)
     
-    const response = await sentMail(userMail,userName,subject,mailContent);
+    sentMail(userMail,userName,subject,mailContent);
+    console.log({error: false, message:`email sent successfully to ${userMail}`})
     res.status(200).json({error: false, message:`email sent successfully to ${userMail}`})
   }catch(error){
     console.log("error in contactMail function",error)

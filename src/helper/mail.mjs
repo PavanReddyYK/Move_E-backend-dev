@@ -45,19 +45,20 @@ export const sendOtp = async (email, otp, name) => {
 };
 
 export const sentMail = async (toMail, userName, subject, content)=>{
+  let thankyouLine = subject === 'CareerContact'? `<h4>Thank you for Contacting with ReddyMoveE Application, we will get back to you shortly.</h4>`:`<h4>Thank you for your valuable time and feedback.</h4>`
   let mailOption ={
     from: org_mail,
     to: toMail,
     subject:`${subject } mail sent to MoveE Application`,
     html: `<h3>Hi ${userName},</h3><br><h4>the message you dropped in our application is <br><i>"${content}"</i></h4> 
-          <br><h4>Thank you for Contacting with ReddyMoveE Application, we will get back to you shortly</h4>
-          <br><h4>Regards</h4><h4>Pavan Reddy Y K</h4>`
+          <br>${thankyouLine}
+          <br><h4>Regards,</h4><h3>Pavan Reddy Y K</h3>`
   }
   transporter.sendMail(mailOption, (err, info)=>{
     if(err){
       console.log("sentMAil error", err);
     }else{
-      console.log(`error sending mail to ${toMail}`,info)
+      console.log(`mail sent successfully`,info.envelope)
     }
   })
 }
