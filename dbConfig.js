@@ -10,6 +10,3 @@ const db = mongoose
   .catch((err) => {
     console.error("Error connecting to the DB");
   });
-
-
-  
