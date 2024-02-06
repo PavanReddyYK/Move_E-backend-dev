@@ -32,9 +32,10 @@ app.use('/v1/movie/',movieRouter)
 app.use("*",(req,res,next)=>{
     res.status(404).json({error:true,message:"Page Not Found!!!"})
 })
-app.use( (err,req,res,next)=>{
-    res.status(400).json({error:true,message:err.message,data:"ok"})
-} )
+app.use((err, req, res, next) => {
+    console.log(`Path: ${req.path} -> Status Code: ${err.status || 500} -> Stack: ${err.stack}`)
+    res.status(err.status || 500).send(err.message);
+});
 
 
 app.set('port',process.env.REACT_APP_PORT)

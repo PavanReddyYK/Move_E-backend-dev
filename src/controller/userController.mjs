@@ -10,11 +10,11 @@ import {
 } from "../helper/helper.mjs";
 import { inviteMail, sendOtp, sentMail } from "../helper/mail.mjs";
 import userMOdel from "../model/userModel.mjs";
-import userGoogleSignInModel from "../model/userGoogleModel.mjs";
+// import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 
 export const registerUser = async (req, res, next) => {
   try {
-    console.log("registerUser",req.body)
+    console.log("registerUser", req.body);
     const { name, email, age, state, country, password } = req.body;
     const userData = {
       name: name,
@@ -28,32 +28,31 @@ export const registerUser = async (req, res, next) => {
     if (userEmailExist) {
       console.log("This Email Already Exist", userEmailExist.email);
       return res.status(409).json("This Email Already Exist");
-    } else {
-      let user = await userMOdel(userData);
-      user.password = getEncryptedPassword(password);
-      const token = jwt.sign(
-        { email: user.email, name: user.name },
-        process.env.REACT_APP_PRIVATE_KEY,
-        // { expiresIn: "50m" }
-      );
-      user.token = token
-      const savedUser = await user.save();
-
-      inviteMail(user.name, user.email);
-      console.log(
-        "🚀 ~ file: userController.mjs:11 ~ registerUser ~ userData:",
-        {
-          id: savedUser.id,
-          email: savedUser.email,
-          token
-        }
-      );
-      res.status(200).json({
-        error: false,
-        status: "successful",
-        user: { user:savedUser, email: savedUser.email, token},
-      });
     }
+
+    const user = new userMOdel(userData);
+    user.password = getEncryptedPassword(password);
+
+    const token = jwt.sign(
+      { email: user.email, name: user.name },
+      process.env.REACT_APP_PRIVATE_KEY,
+      { expiresIn: "50m" }
+    );
+
+    user.token = token;
+    const savedUser = await user.save();
+
+    inviteMail(user.name, user.email);
+    console.log("User registered successfully:", {
+      email: savedUser.email,
+    });
+
+    res.status(200).json({
+      error: false,
+      message: "successful",
+      user: savedUser,
+      token,
+    });
   } catch (error) {
     console.log("error", error.message);
     next(error);
@@ -62,12 +61,13 @@ export const registerUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
   try {
-    console.log("loginUser",req.body)
+    console.log("loginUser", req.body);
     const { email, password } = req.body;
     let user = await userMOdel.findOne({ email });
     if (!user) {
-      return res.status(401)
-      .json({ data: "ok", message: "Invalid Email or Password" });
+      return res
+        .status(401)
+        .json({ data: "ok", message: "Invalid Email or Password" });
     } else {
       const isMatch =
         password === getDecryptPassword(user.password) ? true : false;
@@ -80,14 +80,16 @@ export const loginUser = async (req, res, next) => {
         const token = jwt.sign(
           { email: user.email, name: user.name },
           process.env.REACT_APP_PRIVATE_KEY,
-          // { expiresIn: "50m" }
+          { expiresIn: "50m" }
         );
         await userMOdel.updateOne(
           { email: user.email },
           { $set: { token: token } }
         );
-        delete user.password
-        res.status(200).json({ message: "SignIn Successful", token: token, user:user});
+        delete user.password;
+        res
+          .status(200)
+          .json({ message: "SignIn Successful", token: token, user: user });
         console.log("SigIn Successful");
       }
     }
@@ -96,20 +98,18 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const logoutUser = async (req, res, next)=>{
-  try{
-    console.log("loginUser",req.body)
-    const {email} = req.body;
-    await userMOdel.findOneAndUpdate({email},
-      {$set :{'token':null}})
-      console.log("user loggedOut")
-      res.json({error:true, message:"logOut successfully"})
-  }
-  catch(error){
+export const logoutUser = async (req, res, next) => {
+  try {
+    console.log("loginUser", req.body);
+    const { email } = req.body;
+    await userMOdel.findOneAndUpdate({ email }, { $set: { token: null } });
+    console.log("user loggedOut");
+    res.json({ error: true, message: "logOut successfully" });
+  } catch (error) {
     console.log("error logging out", error.message);
     next(error);
-    }
-}
+  }
+};
 
 export const forgotPassword = async (req, res, next) => {
   try {
@@ -156,7 +156,7 @@ export const verifyOtp = async (req, res, next) => {
           const token = jwt.sign(
             { email: user.email, name: user.name },
             process.env.REACT_APP_PRIVATE_KEY,
-            // { expiresIn: "50m" }
+            { expiresIn: "50m" }
           );
           await userMOdel.findOneAndUpdate(
             { email },
@@ -171,11 +171,11 @@ export const verifyOtp = async (req, res, next) => {
           console.log(
             "Validation Successful:-------------- OTP, password & token updated"
           );
-          delete user.password
+          delete user.password;
           res.status(200).json({
             message: "Validation Successful: OTP, password & token updated",
             token: token,
-            user:user,
+            user: user,
             data: "Ok",
           });
         }
@@ -192,7 +192,7 @@ export const googleSignUp = async (req, res, next) => {
     // ! Set the redirection endpoint for Google to redirect back to after authentication
     request[
       "redirectionURL"
-    ] = `${process.env.REACT_APP_Base_URL_FE}/${UserData.data.token}`;
+    ] = `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL`;
     // ] = `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL`;
 
     // ! Create an OAuth2Client instance with your Google OAuth2 credentials
@@ -215,6 +215,7 @@ export const googleSignUp = async (req, res, next) => {
     res.send(authorizeUrl);
   } catch (error) {
     console.log("error in the googleSignUp", error.message);
+    next(error);
   }
 };
 
@@ -227,7 +228,7 @@ export const googleRedirectionURL = async (req, res, next) => {
       "code=" +
       request.code +
       "&redirect_uri=" +
-      `${process.env.REACT_APP_Base_URL_FE}` +
+      `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL` +
       // `${process.env.REACT_APP_Base_URL_BE}/user/googleRedirectionURL` +
       "&client_id=" +
       `${process.env.REACT_APP_OAuth2Client_CLIENT_ID}` +
@@ -239,7 +240,7 @@ export const googleRedirectionURL = async (req, res, next) => {
       "Content-Type": "application/x-www-form-urlencoded",
     },
   };
-  console.log("payyyyyyyyyyLOad",payLoadData)
+  console.log("payyyyyyyyyyLOad", payLoadData);
   try {
     //     //! Send a POST request to Google's token endpoint to exchange the code for an access token
     let Response = await axios(payLoadData);
@@ -251,30 +252,33 @@ export const googleRedirectionURL = async (req, res, next) => {
     ] = `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${tokenData.access_token}`;
     //     //! Make a GET request to Google's user profile endpoint to retrieve the user's data
     let UserData = await axios.get(request.url);
-    console.log("🚀 ~ file: userController.mjs:230 ~ googleRedirectionURL ~ UserData:", UserData)
+    console.log(
+      "🚀 ~ file: userController.mjs:230 ~ googleRedirectionURL ~ UserDatacls.data:",
+      UserData.data.email
+    );
 
     const token = jwt.sign(
       { email: UserData.data.email, name: UserData.data.name },
       process.env.REACT_APP_PRIVATE_KEY,
-      { expiresIn: "30m" }
+      { expiresIn: "50m" }
     );
 
     UserData.data["token"] = token;
-    const user1 = await userGoogleSignInModel.findOne({
+    const user1 = await userMOdel.findOne({
       email: UserData.data.email,
     });
     if (!user1) {
       //! Create new user model instance by passing the retrieved user details
-      await userGoogleSignInModel.create(UserData.data.emailData.email);
+      await userMOdel.create(UserData.data);
       console.log("used created in database", { emailData: UserData.data });
     } else {
       //! Update existing user model instance by passing the retrieved user details
-      await userGoogleSignInModel.updateOne(
+      await userMOdel.updateOne(
         { email: UserData.data.email },
         { $set: { token: token } }
       );
     }
-    console.log("user updated in database", { emailData: UserData.data.emailData.email });
+    console.log("user updated in database", { emailData: UserData.data.email });
     //     //! Send the user's profile data as a response to the client
     // res.redirect(`http://localhost:3000/${UserData.data.token}`);
     res.redirect(`${process.env.REACT_APP_Base_URL_FE}/${UserData.data.token}`);
@@ -285,15 +289,42 @@ export const googleRedirectionURL = async (req, res, next) => {
 };
 
 export const contactMail = async (req, res, next) => {
-  try{
-    const {userMail, userName, subject, mailContent} = req.body;
-    console.log("first---------",req.body)
-    
-    sentMail(userMail,userName,subject,mailContent);
-    console.log({error: false, message:`email sent successfully to ${userMail}`})
-    res.status(200).json({error: false, message:`email sent successfully to ${userMail}`})
-  }catch(error){
-    console.log("error in contactMail function",error)
-    next(error)
+  try {
+    const { userMail, userName, subject, mailContent } = req.body;
+    console.log("contactMail---------", req.body);
+
+    sentMail(userMail, userName, subject, mailContent);
+    console.log({
+      error: false,
+      message: `email sent successfully to ${userMail}`,
+    });
+    res.status(200).json({
+      error: false,
+      message: `email sent successfully to ${userMail}`,
+    });
+  } catch (error) {
+    console.log("error in contactMail function", error);
+    next(error);
   }
-}
+};
+
+export const fetchUserDetails = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await userMOdel.findOne({
+      email: email,
+    });
+    if (!user) {
+      res
+        .status(404)
+        .json({ error: true, message: `user not found with id: ${email}` });
+    } else {
+      res
+        .status(200)
+        .json({ error: false, message: `user found with id: ${email}`, user });
+    }
+  } catch (error) {
+    console.log("error in fetchUserDetails", error);
+    next(error);
+  }
+};

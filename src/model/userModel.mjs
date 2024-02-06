@@ -2,44 +2,36 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
-    name: {
-      type: String,
-      minLength: [4, "name should be minimum of 4 characters"],
-      maxLength: [15, "name should not exceed 15 characters"],
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+    sub: String,
+    name: String,
+    given_name: String,
+    family_name: String,
+    picture: String,
+    email: String,
+    email_verified: Boolean,
+
     age: {
       type: Number,
-      required: [true, "age is mandatory"],
-      min: [8, "age cannot be below 8 years"],
+      min: [8, "Age cannot be below 8 years"],
     },
-    state: {
+    state: String,
+    country: String,
+    otp: {
       type: String,
+      default: null,
     },
-    country: {
+    token: {
       type: String,
-    },
-    otp:{
-      type:String,
-      default:null
-    },
-    token:{
-      type:String,
-      default: null
+      default: null,
     },
     password: {
       type: String,
-      minLength: [4, "password should be minimum of 4 characters"],
-      required: true,
+      minLength: [4, "Password should be a minimum of 4 characters"],
     },
   },
   { timestamps: true }
 );
+
 
 const user = model('user',userSchema)
 export default user

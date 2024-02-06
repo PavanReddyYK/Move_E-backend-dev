@@ -1,6 +1,7 @@
 import express from "express";
 import {
   contactMail,
+  fetchUserDetails,
   forgotPassword,
   googleRedirectionURL,
   googleSignUp,
@@ -21,6 +22,7 @@ routes.post("/verifyOtp", verifyOtp);
 routes.post("/googleSignUp", googleSignUp);
 routes.get("/googleRedirectionURL", googleRedirectionURL);
 routes.post("/contactMail",contactMail);
+routes.post("/fetchUserDetails", validate, fetchUserDetails);
 
 // routes.post("/loginUser", registerUser);
 
