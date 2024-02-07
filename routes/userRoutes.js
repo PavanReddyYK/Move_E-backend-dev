@@ -24,6 +24,4 @@ routes.get("/googleRedirectionURL", googleRedirectionURL);
 routes.post("/contactMail",contactMail);
 routes.post("/fetchUserDetails", validate, fetchUserDetails);
 
-// routes.post("/loginUser", registerUser);
-
 export default routes;

@@ -10,7 +10,6 @@ import {
 } from "../helper/helper.mjs";
 import { inviteMail, sendOtp, sentMail } from "../helper/mail.mjs";
 import userMOdel from "../model/userModel.mjs";
-// import userGoogleSignInModel from "../model/userGoogleModel.mjs";
 
 export const registerUser = async (req, res, next) => {
   try {
