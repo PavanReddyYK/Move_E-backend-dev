@@ -1,13 +1,13 @@
 import movieModel from "../model/movieModel.mjs";
 import watchListModel from "../model/watchListModel.mjs";
-
+import mongoose from 'mongoose';
 
 export const fetchAllMovies = async (req, res, next) => {
   try {
     const movies = await movieModel.find({
       poster: { $exists: true },
       year: { $gt: 2010 },
-      "imdb.rating": { $gt: 7.0 },
+      "imdb.rating": { $gt: 2.4 },
       "imdb.votes": { $gt: 100000 },
     });
     // movies.map((m) => console.log(m.title));
@@ -63,14 +63,14 @@ export const fetchMovieById = async (req, res, next) => {
 export const addMovieToWatchList = async (req, res, next) => {
   try {
     const { email, movieId } = req.body;
-    // const { email1} = req.data.email;
-    // console.log("🚀 ~ file: movieController.mjs:70 ~ addMovieToWatchList ~ email1:", email1)
-    console.log("email::::", email + "    movieid:::", movieId);
+    if (!movieId) {
+      return res.status(400).json({ message: "Invalid movieId", error: true });
+    }
 
     const watchList = await watchListModel.findOneAndUpdate(
       { email },
-      { $push: { movies: movieId } },
-      { new: true, upsert: true } // The upsert option will create the user if not found
+      { $addToSet: { movies: movieId } }, // Add movieId as a string
+      { new: true, upsert: true } // Create document if it doesn't exist
     );
 
     console.log("watchList", watchList);
@@ -82,40 +82,41 @@ export const addMovieToWatchList = async (req, res, next) => {
 };
 
 export const fetchMovieWatchList = async (req, res, next) => {
-  try{
+  try {
     const { email } = req.body;
-    console.log("reqq!21", req.body);
     const watchList = await watchListModel.findOne({ email });
-  
     if (watchList != null) {
       res.status(200).json({ watchList });
     } else {
       res.status(200).json({ message: "none" });
     }
-  }catch(error){
-    console.log('fetchMovieWatchList error',error)
+  } catch (error) {
+    console.log('fetchMovieWatchList error', error)
     next(error);
   }
 };
-
-import mongoose from 'mongoose';
 
 export const removeWatchlist = async (req, res, next) => {
   try {
     const { email, movieId } = req.body;
 
-    // Convert movieId to ObjectId
-    const movieObjectId = mongoose.Types.ObjectId(movieId);
+    if (!movieId) {
+      return res.status(400).json({ message: "Invalid movieId", error: true });
+    }
 
-    const response = await movieModel.updateOne(
+    const watchList = await watchListModel.findOneAndUpdate(
       { email },
-      { $pull: { movies: movieObjectId } }
+      { $pull: { movies: movieId } }, // Remove the string value matching movieId
+      { new: true } // Return the updated document
     );
 
-    console.log(response);
-    res.status(200).json(response);
+    if (!watchList) {
+      return res.status(404).json({ message: "Watchlist not found", error: true });
+    }
+    
+    res.status(200).json({ message: "Removed successfully", error: false });
   } catch (error) {
-    console.log("removeWatchlist error", error);
+    console.log("Error removing movie from watchList: ", error);
     next(error);
   }
 };

@@ -15,6 +15,6 @@ routes.get("/fetchAllMovies", fetchAllMovies);
 routes.get("/fetchMovieById/:id", fetchMovieById);
 routes.post("/addMovieToWatchlist", validate, addMovieToWatchList);
 routes.post("/fetchMovieWatchList", validate, fetchMovieWatchList);
-routes.post("/removeWatchlist",validate,removeWatchlist)
+routes.post("/removeWatchlist", validate, removeWatchlist)
 
 export default routes;

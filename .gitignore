@@ -32,3 +32,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.t
+
+src/fonts
+routes/pdfRoutes.js
+src/controller/pdfController.mjs
+src/service/
